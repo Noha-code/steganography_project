@@ -16,7 +16,7 @@ socketio = SocketIO(app)
 
 message_passphrases = {}
 
-@app.route('/')
+@app.route('/chat')
 def index():
     return render_template('chat.html')
 
