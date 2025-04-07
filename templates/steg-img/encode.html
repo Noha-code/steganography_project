@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hide a Message</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Hide a Secret Message in an Image</h1>
+        <form action="/encode" method="post" enctype="multipart/form-data">
+            <label class="file-input">
+                <input type="file" name="image" required>
+            </label>
+            <input type="text" name="message" placeholder="Enter your secret message" required>
+            <input type="password" name="key" placeholder="Encryption Key" required>
+            <button type="submit" class="transparent-btn">Hide Message</button>
+        </form>
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <div class="alert">
+      {% for msg in messages %}
+        <p style="color: red;">{{ msg }}</p>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+    </div>
+</body>
+</html>
