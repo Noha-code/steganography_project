@@ -76,19 +76,19 @@ def extract_message(audio_path, key):
     return decrypt_message(encrypted_message, key)
 
 # Route pour la page d'accueil
-@app.route('/')
+@app.route('/audio')
 def index():
-    return render_template('index.html')
+    return render_template('steg-audio/index.html')
 
 # Route pour la page d'encodage (cacher un message)
 @app.route('/encode')
 def encode_page():
-    return render_template('encode.html')
+    return render_template('steg-audio/encode.html')
 
 # Route pour la page de décodage (extraire un message)
 @app.route('/decode')
 def decode_page():
-    return render_template('decode.html')
+    return render_template('steg-audio/decode.html')
 
 # Route POST pour encoder (cacher un message dans l'audio)
 @app.route('/encode', methods=['POST'])
@@ -155,7 +155,7 @@ def decode():
             return redirect(url_for('decode_page'))
 
         flash("✅ Message extrait avec succès !")
-        return render_template("decode.html", message=message)
+        return render_template("steg-audio/decode.html", message=message)
 
     except Exception as e:
         flash(f"Une erreur est survenue lors du décodage : {str(e)}")
