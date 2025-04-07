@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Cacher un message - Stéganographie PDF</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-image: url('/static/images/holla.jpg');
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .contenu {
+            text-align: center;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            width: 400px;
+        }
+        form div {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="contenu">
+        <h1>Cacher un message dans un PDF</h1>
+        <form action="/hide" method="POST" enctype="multipart/form-data">
+            <div>
+                <label for="pdf_file">Fichier PDF :</label>
+                <input type="file" id="pdf_file" name="pdf_file" accept="application/pdf" required>
+            </div>
+            <div>
+                <label for="message">Message à cacher :</label>
+                <textarea id="message" name="message" rows="5" required></textarea>
+            </div>
+            <div>
+                <label for="password">Mot de passe :</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <div>
+                <button type="submit">Cacher le message</button>
+            </div>
+            <div>
+                <a href="index.html" >
+                    <button type="button">Revenir à l'accueil</button>
+                </a>
+            </div>
+        </form>
+    </div>
+</body>
+</html>
