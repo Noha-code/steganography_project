@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Extraire un message - Stéganographie PDF</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif; /* Police en Arial */
+            background-image: url('/static/images/holla.jpg'); /* Chemin vers l'image */
+            background-size: cover; /* L'image couvre tout l'écran */
+            background-repeat: no-repeat; /* Pas de répétition */
+            background-position: center; /* Centré */
+            display: flex;
+            justify-content: center; /* Centre horizontalement */
+            align-items: center; /* Centre verticalement */
+            height: 100vh; /* Hauteur de l'écran */
+            margin: 0; /* Supprime les marges par défaut */
+        }
+        .contenu {
+            text-align: left; /* Aligne les champs et noms à gauche */
+            background-color: rgba(255, 255, 255, 0.8); /* Fond blanc semi-transparent */
+            padding: 20px;
+            border-radius: 10px; /* Coins arrondis */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Effet d'ombre */
+        }
+        form {
+            display: flex;
+            flex-direction: column; /* Organise les champs verticalement */
+            gap: 10px; /* Espace entre les champs */
+        }
+        label {
+            margin-right: 10px; /* Espace entre le texte et le champ de saisie */
+        }
+        input, button {
+            width: 100%; /* Les champs occupent toute la largeur */
+            padding: 10px; /* Espacement interne */
+            border-radius: 5px; /* Coins arrondis */
+            border: 1px solid #ccc; /* Bordure légère */
+        }
+        button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="contenu">
+        <h1>Extraire un message d'un PDF</h1>
+        <form action="/extract" method="post" enctype="multipart/form-data">
+            <div>
+                <label for="pdf_file">Fichier PDF :</label>
+                <input type="file" id="pdf_file" name="pdf_file" accept="application/pdf" required>
+            </div>
+            <div>
+                <label for="password">Mot de passe :</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <div>
+                <button type="submit">Extraire le message</button>
+            </div>
+        </form>
+        <br>
+        <div>
+            <a href="/">
+                <button type="button">Revenir à l'accueil</button>
+            </a>
+        </div>
+          
+    </div>
+</body>
+</html>
