@@ -89,7 +89,7 @@ def extract_from_metadata(pdf_path, password):
     return "[Aucun message trouvé]"
 
 # --- Routes ---
-@app.route('/')
+@app.route('/pdf')
 def index():
     return render_template('steg-pdf/index.html')
 
