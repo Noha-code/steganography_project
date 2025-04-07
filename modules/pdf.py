@@ -91,15 +91,15 @@ def extract_from_metadata(pdf_path, password):
 # --- Routes ---
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('steg-pdf/index.html')
 
 @app.route('/hide_page')
 def hide_page():
-    return render_template('hide_page.html')
+    return render_template('steg-pdf/hide_page.html')
 
 @app.route('/extract_page')
 def extract_page():
-    return render_template('extract_page.html')
+    return render_template('steg-pdf/extract_page.html')
 
 @app.route('/hide', methods=['POST'])
 def hide():
