@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Accueil - Stéganographie PDF</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif; /* Police globale */
+            background-image: url('/static/images/holla.jpg'); /* Image de fond */
+            background-size: cover; /* Couvre tout l'écran */
+            background-repeat: no-repeat; /* Pas de répétition */
+            background-position: center; /* Centré */
+            margin: 0; /* Supprime les marges */
+            padding: 0; /* Supprime les espaces */
+            display: flex; /* Active Flexbox */
+            justify-content: center; /* Centre horizontalement */
+            align-items: center; /* Centre verticalement */
+            height: 100vh; /* Hauteur de la page */
+        }
+        .contenu {
+            text-align: center; /* Centre le texte dans le contenu */
+            background-color: rgba(240, 232, 232, 0.8); 
+            padding: 20px;
+            border-radius: 10px; /* Coins arrondis */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Effet d'ombre */
+        }
+        button {
+            font-family: Arial, sans-serif;
+            background-color: #007BFF; /* Couleur bleue des boutons */
+            color: white; /* Texte blanc */
+            border: none; /* Supprime les bordures */
+            border-radius: 5px; /* Coins arrondis */
+            padding: 10px 20px; /* Espacement interne */
+            cursor: pointer; /* Curseur interactif */
+        }
+        button:hover {
+            background-color: #0056b3; /* Couleur plus sombre au survol */
+        }
+        a {
+            text-decoration: none; /* Supprime le soulignement des liens */
+        }
+    </style>
+</head>
+<body>
+    <div class="contenu">
+        <h1>Bienvenue dans l'application de stéganographie PDF</h1>
+        <h2>Choisissez une option :</h2>
+        <a href="hide_page"><button>Cacher un message</button></a>
+        <a href="extract_page"><button>Extraire un message</button></a>
+    </div>
+</body>
+</html>
+
