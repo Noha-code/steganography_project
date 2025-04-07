@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Steganography Tool</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-image: url("{{ url_for('static', filename='images/background1.jpeg') }}");
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .contenu {
+            text-align: center;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="contenu">
+        <h1>Welcome to the Steganography Tool</h1>
+        <h2>Choose an action below:</h2>
+        <a href="/encode"><button class="transparent-btn">Hide a Message</button></a>
+        <a href="/decode"><button class="transparent-btn">Extract a Message</button></a>
+    </div>
+</body>
+</html>
