@@ -5,28 +5,40 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hide a Message</title>
     <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <div class="container">
-        <h1>Hide a Secret Message in an Image</h1>
+        <h1>Hide a Secret Message</h1>
+        <p>Embed your confidential information within an image</p>
+        
         <form action="/encode" method="post" enctype="multipart/form-data">
             <label class="file-input">
-                <input type="file" name="image" required>
+                <i class="fas fa-image"></i> Select Image
+                <input type="file" name="image" required style="display: none;">
             </label>
+            
             <input type="text" name="message" placeholder="Enter your secret message" required>
             <input type="password" name="key" placeholder="Encryption Key" required>
-            <button type="submit" class="transparent-btn">Hide Message</button>
+            
+            <button type="submit" class="transparent-btn">
+                <i class="fas fa-lock"></i> Hide Message
+            </button>
         </form>
-{% with messages = get_flashed_messages() %}
-  {% if messages %}
-    <div class="alert">
-      {% for msg in messages %}
-        <p style="color: red;">{{ msg }}</p>
-      {% endfor %}
-    </div>
-  {% endif %}
-{% endwith %}
-
+        
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <div class="alert">
+              {% for msg in messages %}
+                <p>{{ msg }}</p>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+        
+        <a href="/" class="transparent-btn" style="margin-top: 20px;">
+            <i class="fas fa-home"></i> Back to Home
+        </a>
     </div>
 </body>
 </html>
