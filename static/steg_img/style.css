@@ -1,79 +1,152 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Segoe+UI:wght@300;400;600;700&family=Roboto:wght@300;400;600;700&display=swap');
+
+:root {
+    --primary: #4A90E2;
+    --dark-bg: #1A1D26;
+    --card-bg: #252A38;
+    --text: #E0E5EC;
+    --highlight: #FF6B6B;
+}
 
 body {
-    background: url('/static/images/background.jpg') no-repeat center center fixed;
+    font-family: 'Segoe UI', 'Roboto', sans-serif;
+    color: var(--text);
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(rgba(26, 29, 38, 0.85), rgba(26, 29, 38, 0.95)), 
+                url('/static/sec.jpg') no-repeat center center fixed;
     background-size: cover;
-    font-family: 'Poppins', sans-serif;
-    text-align: center;
-    color: white;
+    min-height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
-    margin: 0;
 }
 
+/* Container styles */
 .container {
-    background: rgba(0, 0, 0, 0.7);
+    background: var(--card-bg);
     padding: 40px;
-    border-radius: 15px;
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
     width: 90%;
     max-width: 500px;
+    text-align: center;
 }
 
 h1 {
-    font-size: 28px;
-    font-weight: 600;
-    margin-bottom: 20px;
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+    background: linear-gradient(90deg, var(--primary), var(--highlight));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-weight: 700;
+}
+
+h2 {
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+    color: rgba(224, 229, 236, 0.9);
 }
 
 p {
-    font-size: 16px;
-    opacity: 0.8;
+    color: rgba(224, 229, 236, 0.8);
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+    line-height: 1.6;
 }
 
 .transparent-btn {
     background: transparent;
-    color: white;
-    border: 2px solid white;
+    color: var(--text);
+    border: 2px solid var(--primary);
     padding: 12px 20px;
     margin: 10px;
     cursor: pointer;
-    transition: 0.3s ease;
+    transition: all 0.3s ease;
     border-radius: 10px;
     font-size: 16px;
+    display: inline-block;
+    text-decoration: none;
 }
 
 .transparent-btn:hover {
-    background: white;
-    color: black;
+    background: var(--primary);
+    color: var(--dark-bg);
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(74, 144, 226, 0.4);
 }
 
+/* Form elements */
 input, button {
     width: 100%;
-    margin-top: 10px;
+    margin-top: 15px;
 }
 
-input {
+input[type="text"], 
+input[type="password"] {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(74, 144, 226, 0.3);
     padding: 12px;
     border-radius: 10px;
-    border: none;
+    color: var(--text);
+    font-size: 16px;
     outline: none;
-    text-align: center;
+}
+
+input[type="text"]::placeholder, 
+input[type="password"]::placeholder {
+    color: rgba(224, 229, 236, 0.5);
 }
 
 form {
     display: flex;
     flex-direction: column;
     align-items: center;
+    width: 100%;
 }
 
 .file-input {
-    background: white;
-    color: black;
+    display: block;
+    width: 100%;
     padding: 12px;
     border-radius: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text);
+    border: 1px solid rgba(74, 144, 226, 0.3);
     cursor: pointer;
+    margin-bottom: 10px;
 }
 
+button[type="submit"] {
+    background: var(--primary);
+    color: var(--dark-bg);
+    border: none;
+    padding: 14px;
+    border-radius: 10px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 20px;
+}
+
+button[type="submit"]:hover {
+    background: linear-gradient(90deg, var(--primary), var(--highlight));
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(74, 144, 226, 0.4);
+}
+
+.alert {
+    margin-top: 20px;
+    padding: 10px;
+    background: rgba(255, 107, 107, 0.2);
+    border-left: 4px solid var(--highlight);
+    border-radius: 5px;
+    text-align: left;
+}
+
+.alert p {
+    color: var(--highlight) !important;
+    margin: 0;
+    font-size: 0.9rem;
+}
