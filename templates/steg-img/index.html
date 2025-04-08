@@ -5,14 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Steganography Tool</title>
     <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <div class="container">
-        <h1>Welcome to the Steganography Tool</h1>
-        <h2>(Only used for images)</h2>
-        <p>Choose an action below:</p>
-        <a href="/encode"><button class="transparent-btn">Hide a Message</button></a>
-        <a href="/decode"><button class="transparent-btn">Extract a Message</button></a>
+        <h1>Steganography Tool</h1>
+        <p>Hide and extract secret messages within images</p>
+        
+        <a href="/encode" class="transparent-btn">
+            <i class="fas fa-lock"></i> Hide a Message
+        </a>
+        
+        <a href="/decode" class="transparent-btn">
+            <i class="fas fa-unlock"></i> Extract a Message
+        </a>
     </div>
 </body>
 </html>
