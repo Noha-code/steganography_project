@@ -5,29 +5,39 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Extract a Message</title>
     <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <div class="container">
-        <h1>Extract a Hidden Message from an Image</h1>
+        <h1>Extract Hidden Message</h1>
+        <p>Recover secret information from a steganographic image</p>
+        
         <form action="/decode" method="post" enctype="multipart/form-data">
             <label class="file-input">
-                <input type="file" name="image" required>
+                <i class="fas fa-file-image"></i> Select Image
+                <input type="file" name="image" required style="display: none;">
             </label>
+            
             <input type="password" name="key" placeholder="Decryption Key" required>
-            <button type="submit" class="transparent-btn">Extract Message</button>
+            
+            <button type="submit" class="transparent-btn">
+                <i class="fas fa-unlock"></i> Extract Message
+            </button>
         </form>
-
-
-{% with messages = get_flashed_messages() %}
-  {% if messages %}
-    <div class="alert">
-      {% for msg in messages %}
-        <p style="color: red;">{{ msg }}</p>
-      {% endfor %}
-    </div>
-  {% endif %}
-{% endwith %}
-
+        
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <div class="alert">
+              {% for msg in messages %}
+                <p>{{ msg }}</p>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+        
+        <a href="/" class="transparent-btn" style="margin-top: 20px;">
+            <i class="fas fa-home"></i> Back to Home
+        </a>
     </div>
 </body>
 </html>
