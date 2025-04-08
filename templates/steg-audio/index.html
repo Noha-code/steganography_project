@@ -4,8 +4,18 @@
     <meta charset="UTF-8">
     <title>Steganography Tool</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Segoe+UI:wght@300;400;600;700&family=Roboto:wght@300;400;600;700&display=swap');
+        
+        :root {
+            --primary: #4A90E2;
+            --dark-bg: #1A1D26;
+            --card-bg: #252A38;
+            --text: #E0E5EC;
+            --highlight: #FF6B6B;
+        }
+        
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', 'Roboto', sans-serif;
             background-image: url("{{ url_for('static', filename='images/background1.jpeg') }}");
             background-size: cover;
             background-repeat: no-repeat;
@@ -16,25 +26,54 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
+            color: var(--text);
         }
+        
         .contenu {
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 500px;
             text-align: center;
-            background-color: rgba(255, 255, 255, 0.9);
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
         }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(90deg, var(--primary), var(--highlight));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-weight: 700;
+        }
+        
+        h2 {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            color: rgba(224, 229, 236, 0.9);
+        }
+        
         button {
-            background-color: #007BFF;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            padding: 10px 20px;
-            cursor: pointer;
+            background: transparent;
+            color: var(--text);
+            border: 2px solid var(--primary);
+            padding: 12px 20px;
             margin: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 10px;
+            font-size: 16px;
+            display: inline-block;
+            text-decoration: none;
         }
+        
         button:hover {
-            background-color: #0056b3;
+            background: var(--primary);
+            color: var(--dark-bg);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(74, 144, 226, 0.4);
         }
     </style>
 </head>
@@ -42,8 +81,8 @@
     <div class="contenu">
         <h1>Welcome to the Steganography Tool</h1>
         <h2>Choose an action below:</h2>
-        <a href="/encode"><button class="transparent-btn">Hide a Message</button></a>
-        <a href="/decode"><button class="transparent-btn">Extract a Message</button></a>
+        <a href="/encode"><button>Hide a Message</button></a>
+        <a href="/decode"><button>Extract a Message</button></a>
     </div>
 </body>
 </html>
