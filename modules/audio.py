@@ -72,7 +72,7 @@ def extract_message(audio_path, key):
     secret_message = ''.join(chars)
     encrypted_message = secret_message.replace("###", "")
     
-    # Déchiffrer le message extrait
+      # Déchiffrer le message extrait
     return decrypt_message(encrypted_message, key)
 
 # Route pour la page d'accueil
