@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, send_file
+from flask import Flask, render_template, request, send_file, jsonify
 import os
 from PyPDF2 import PdfReader, PdfWriter
 from werkzeug.utils import secure_filename
@@ -17,8 +17,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # --- Fonction pour dériver la clé de chiffrement à partir du mot de passe ---
-def derive_key(password: str):
-    salt = b'\x00' * 16  # Utiliser un sel fixe ou unique par utilisateur pour la sécurité
+def derive_key(password: str, salt: bytes):
     kdf = PBKDF2HMAC(
         algorithm=hashes.SHA256(),
         length=32,
@@ -30,7 +29,8 @@ def derive_key(password: str):
 
 # --- Fonction pour chiffrer le message ---
 def encrypt_message(message: str, password: str):
-    key = derive_key(password)
+    salt = os.urandom(16)  # Sel aléatoire pour chaque message
+    key = derive_key(password, salt)
     iv = os.urandom(16)  # Initialisation vector (IV) pour AES
     cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend())
     encryptor = cipher.encryptor()
@@ -41,15 +41,17 @@ def encrypt_message(message: str, password: str):
 
     encrypted_message = encryptor.update(padded_data) + encryptor.finalize()
 
-    return base64.b64encode(iv + encrypted_message).decode('utf-8')
+    # Inclure salt et IV avec le message chiffré
+    return base64.b64encode(salt + iv + encrypted_message).decode('utf-8')
 
 # --- Fonction pour déchiffrer le message ---
 def decrypt_message(encrypted_message: str, password: str):
     data = base64.b64decode(encrypted_message)
-    iv = data[:16]  # Le premier 16 bytes sont l'IV
-    encrypted_message = data[16:]
+    salt = data[:16]  # Les premiers 16 bytes sont le sel
+    iv = data[16:32]  # Les 16 bytes suivants sont l'IV
+    encrypted_message = data[32:]
 
-    key = derive_key(password)
+    key = derive_key(password, salt)
     cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend())
     decryptor = cipher.decryptor()
 
@@ -85,44 +87,85 @@ def extract_from_metadata(pdf_path, password):
     encrypted_message = metadata.get("/SteganoMessage", None)
 
     if encrypted_message:
-        return decrypt_message(encrypted_message, password)
+        try:
+            return decrypt_message(encrypted_message, password)
+        except Exception as e:
+            return f"[Erreur de déchiffrement: Mot de passe incorrect ou fichier corrompu]"
     return "[Aucun message trouvé]"
 
 # --- Routes ---
-@app.route('/pdf')
+@app.route('/')
 def index():
-    return render_template('steg-pdf/index.html')
+    return render_template('index.html')
 
 @app.route('/hide_page')
 def hide_page():
-    return render_template('steg-pdf/hide_page.html')
+    return render_template('hide_page.html')
 
 @app.route('/extract_page')
 def extract_page():
-    return render_template('steg-pdf/extract_page.html')
+    return render_template('extract_page.html')
 
 @app.route('/hide', methods=['POST'])
 def hide():
     pdf = request.files['pdf_file']
     message = request.form['message']
     password = request.form['password']
-    filename = secure_filename(pdf.filename)
-    path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    
+    # Récupérer le nom de fichier original et le sécuriser
+    original_filename = secure_filename(pdf.filename)
+    
+    # Séparer le nom du fichier de son extension
+    filename_base, filename_ext = os.path.splitext(original_filename)
+    
+    # Créer le nouveau nom de fichier avec "-cache" ajouté
+    download_filename = f"{filename_base}-cache{filename_ext}"
+    
+    # Sauvegarder temporairement le fichier
+    path = os.path.join(app.config['UPLOAD_FOLDER'], original_filename)
     pdf.save(path)
 
-    output = hide_in_metadata(path, message, password)
-    return send_file(output, as_attachment=True, download_name="pdf_cache.pdf")
+    try:
+        output = hide_in_metadata(path, message, password)
+        # Nettoyer le fichier temporaire
+        os.remove(path)
+        return send_file(output, as_attachment=True, download_name=download_filename)
+    except Exception as e:
+        # Nettoyer le fichier temporaire en cas d'erreur aussi
+        if os.path.exists(path):
+            os.remove(path)
+        return jsonify({'success': False, 'error': f'Erreur: {str(e)}'}), 500
 
 @app.route('/extract', methods=['POST'])
 def extract():
-    pdf = request.files['pdf_file']
-    password = request.form['password']
-    filename = secure_filename(pdf.filename)
-    path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    pdf.save(path)
-
-    message = extract_from_metadata(path, password)
-    return f"<h1>Message extrait :</h1><p>{message}</p><a href='/'>⬅ Retour</a>"
+    if 'pdf_file' not in request.files:
+        return jsonify({'success': False, 'error': 'Aucun fichier sélectionné'})
+    
+    pdf_file = request.files['pdf_file']
+    password = request.form.get('password')
+    
+    if pdf_file.filename == '':
+        return jsonify({'success': False, 'error': 'Aucun fichier sélectionné'})
+    
+    try:
+        # Sauvegarder temporairement le fichier
+        filename = secure_filename(pdf_file.filename)
+        path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        pdf_file.save(path)
+        
+        # Extraire le message
+        extracted_message = extract_from_metadata(path, password)
+        
+        # Nettoyer le fichier temporaire
+        os.remove(path)
+        
+        return jsonify({'success': True, 'message': extracted_message})
+        
+    except Exception as e:
+        # Nettoyer le fichier temporaire en cas d'erreur aussi
+        if os.path.exists(path):
+            os.remove(path)
+        return jsonify({'success': False, 'error': f'Erreur: {str(e)}'})
 
 if __name__ == '__main__':
     app.run(debug=True)
