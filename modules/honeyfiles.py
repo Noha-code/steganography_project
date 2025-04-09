@@ -296,9 +296,9 @@ def read_logs(log_type="creation"):
         return "Error reading logs."
 
 # Route for homepage - Modified to serve index.html directly
-@app.route('/')
+@app.route('/honeyfiles')
 def home():
-    return render_template("index.html")
+    return render_template("honeyfiles/index.html")
 
 # Route for main image protection page
 @app.route('/protect', methods=['GET', 'POST'])
@@ -386,7 +386,7 @@ def protect_image():
     # GET method - Display page with logs
     creation_logs = read_logs("creation")
     access_logs = read_logs("access")
-    return render_template("protect_image.html", creation_logs=creation_logs, access_logs=access_logs, webhook_url=WEBHOOK_URL)
+    return render_template("honeyfiles/protect_image.html", creation_logs=creation_logs, access_logs=access_logs, webhook_url=WEBHOOK_URL)
 
 # Route to serve honeypot HTML files
 @app.route('/honeypot/<tracking_id>')
@@ -452,7 +452,7 @@ def check_accesses():
 @app.errorhandler(404)
 @app.route('/not-found')
 def not_found(e=None):
-    return render_template("404.html"), 404
+    return render_template("honeyfiles/404.html"), 404
 
 # Route for quick image protection with default parameters
 @app.route('/quick-protect', methods=['POST'])
