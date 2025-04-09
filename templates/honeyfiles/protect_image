@@ -1,1 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HoneyImage - Image Protection Tool</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Segoe+UI:wght@300;400;600;700&family=Roboto:wght@300;400;600;700&display=swap');
+        
+        :root {
+            --primary: #4A90E2;
+            --dark-bg: #1A1D26;
+            --card-bg: #252A38;
+            --text: #E0E5EC;
+            --highlight: #FF6B6B;
+        }
+        
+        body {
+            font-family: 'Segoe UI', 'Roboto', sans-serif;
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(rgba(26, 29, 38, 0.85), rgba(26, 29, 38, 0.95)), url('/static/images/background4.jpeg') no-repeat center center fixed;
+            background-size: cover;
+            min-height: 100vh;
+        }
+        
+        header {
+            background: linear-gradient(rgba(26, 29, 38, 0.85), rgba(26, 29, 38, 0.95)), url('/static/images/background4.jpeg') no-repeat center center fixed;
+            background-size: cover;
+            color: var(--text);
+            padding: 1.5rem;
+            text-align: center;
+            position: relative;
+        }
+        
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(90deg, var(--primary), var(--highlight));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-weight: 700;
+        }
+        
+        header h1 .emoji {
+            background: none;
+            -webkit-background-clip: unset;
+            background-clip: unset;
+            color: inherit;
+        }
+        
+        header p {
+            color: rgba(224, 229, 236, 0.8);
+            font-size: 1.1rem;
+        }
+        
+        main {
+            max-width: 1000px; /* Reduced from 1200px */
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        
+        .container {
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            width: 77%; /* Medium width adjustment */
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        h1, h2, h3 {
+            color: var(--text);
+        }
+        
+        h2 {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            color: rgba(224, 229, 236, 0.9);
+            border-bottom: 1px solid rgba(74, 144, 226, 0.3);
+            padding-bottom: 0.5rem;
+        }
+        
+        h3 {
+            font-size: 1.3rem;
+            color: rgba(224, 229, 236, 0.9);
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+            color: var(--text);
+            text-align: left;
+        }
+        
+        input[type="text"],
+        input[type="url"],
+        textarea,
+        input[type="file"] {
+            width: 100%;
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(74, 144, 226, 0.3);
+            border-radius: 10px;
+            color: var(--text);
+            font-size: 16px;
+            outline: none;
+        }
+        
+        input[type="text"]::placeholder,
+        input[type="url"]::placeholder,
+        textarea::placeholder {
+            color: rgba(224, 229, 236, 0.5);
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin: 1rem 0;
+            text-align: left;
+        }
+        
+        .checkbox-group label {
+            margin-left: 0.5rem;
+            margin-bottom: 0;
+        }
+        
+        button {
+            background: var(--primary);
+            color: var(--dark-bg);
+            border: none;
+            padding: 14px;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+        
+        button:hover {
+            background: linear-gradient(90deg, var(--primary), var(--highlight));
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(74, 144, 226, 0.4);
+        }
+        
+        .flash {
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 10px;
+            text-align: left;
+        }
+        
+        .flash.success {
+            background: rgba(75, 181, 67, 0.2);
+            border-left: 4px solid #4bb543;
+        }
+        
+        .flash.error {
+            background: rgba(255, 107, 107, 0.2);
+            border-left: 4px solid var(--highlight);
+        }
+        
+        .flash.info {
+            background: rgba(74, 144, 226, 0.2);
+            border-left: 4px solid var(--primary);
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 1rem;
+        }
+        
+        .tab {
+            padding: 0.75rem 1.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(74, 144, 226, 0.3);
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            flex: 1;
+        }
+        
+        .tab:first-child {
+            border-top-left-radius: 10px;
+            border-bottom-left-radius: 10px;
+        }
+        
+        .tab:last-child {
+            border-top-right-radius: 10px;
+            border-bottom-right-radius: 10px;
+        }
+        
+        .tab.active {
+            background: var(--primary);
+            color: var(--dark-bg);
+            border-color: var(--primary);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .log-content {
+            background-color: rgba(26, 29, 38, 0.9);
+            color: var(--text);
+            padding: 1rem;
+            border-radius: 10px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid rgba(74, 144, 226, 0.3);
+        }
+        
+        .info-box {
+            background: rgba(74, 144, 226, 0.1);
+            border-left: 4px solid var(--primary);
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border-radius: 5px;
+            text-align: left;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 2rem;
+            padding: 1rem;
+            color: rgba(224, 229, 236, 0.6);
+            font-size: 0.9rem;
+        }
+        
+        .log-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .refresh-btn {
+            background: none;
+            border: none;
+            color: var(--primary);
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: transform 0.3s ease;
+            padding: 0.5rem;
+        }
+        
+        .refresh-btn:hover {
+            color: var(--highlight);
+            transform: rotate(180deg);
+            background: none;
+            box-shadow: none;
+        }
+        
+        .pulse {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--highlight);
+            margin-right: 8px;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% {
+                transform: scale(0.9);
+                box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.7);
+            }
+            
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 10px rgba(255, 107, 107, 0);
+            }
+            
+            100% {
+                transform: scale(0.9);
+                box-shadow: 0 0 0 0 rgba(255, 107, 107, 0);
+            }
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background-color: var(--highlight);
+            color: var(--dark-bg);
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .home-link {
+            color: var(--text);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            position: absolute;
+            left: 20px;
+            top: 20px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .home-link i {
+            margin-right: 5px;
+        }
+        
+        .home-link:hover {
+            color: var(--primary);
+            text-decoration: none;
+        }
+        
+        small {
+            color: rgba(224, 229, 236, 0.6);
+            display: block;
+            margin-top: 0.25rem;
+            text-align: left;
+        }
+        
+        /* New styles for how-it-works section */
+        .how-it-works {
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            width: 85%;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .how-it-works h2 {
+            color: rgba(224, 229, 236, 0.9);
+            border-bottom: 1px solid rgba(74, 144, 226, 0.3);
+            padding-bottom: 0.5rem;
+        }
+        
+        .how-it-works ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        
+        .how-it-works ul li {
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+        
+        .how-it-works strong {
+            color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="{{ url_for('home') }}" class="home-link">
+            <i class="fas fa-home"></i> Back to Home
+        </a>
+        <h1><span class="emoji">🐞</span> <span class="emoji">🛡️</span> HoneyImage Protection Tool</h1>
+        <p>Secure your images with embedded tracking for leak detection</p>
+    </header>
 
+    <main>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash {{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="container">
+            <h2>🛡️ Protect an Image</h2>
+            
+            <div class="info-box">
+                <p><strong>How it works:</strong> Upload an image and we'll embed hidden tracking links in its metadata. 
+                If someone accesses your image and views its EXIF data or metadata, their access will be logged and you'll be notified.</p>
+            </div>
+            
+            <form action="{{ url_for('protect_image') }}" method="post" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="image">🖼️ Select Image (.jpg):</label>
+                    <input type="file" id="image" name="image" accept=".jpg,.jpeg,.png,.gif,.bmp" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="custom_filename">📝 Custom Filename (optional):</label>
+                    <input type="text" id="custom_filename" name="custom_filename" placeholder="Leave blank for auto-generated name">
+                </div>
+                
+                <div class="checkbox-group">
+                    <input type="checkbox" id="use_attractive_name" name="use_attractive_name">
+                    <label for="use_attractive_name">🎯 Use an attractive filename (e.g., "passwords.jpg", "confidential_data.png")</label>
+                </div>
+                
+                <div class="form-group">
+                    <label for="metadata_title">📋 Metadata Title (optional):</label>
+                    <input type="text" id="metadata_title" name="metadata_title" placeholder="E.g., Confidential Company Information">
+                </div>
+                
+                <div class="form-group">
+                    <label for="metadata_keywords">🔑 Metadata Keywords (optional):</label>
+                    <input type="text" id="metadata_keywords" name="metadata_keywords" placeholder="E.g., confidential,secret,private,secure">
+                </div>
+                
+                <div class="form-group">
+                    <label for="webhook_url">🔔 Webhook URL for Alerts (optional):</label>
+                    <input type="url" id="webhook_url" name="webhook_url" placeholder="Discord/Slack webhook URL" value="{{ webhook_url or '' }}">
+                    <small>Receive instant notifications when your honeypot is accessed</small>
+                </div>
+                
+                <button type="submit">🍯 Create HoneyFile & Download</button>
+            </form>
+        </div>
+        
+        <div class="container">
+            <h2>📊 Activity Logs</h2>
+            
+            <div class="card-body">
+                <div class="tabs">
+                    <button class="tab active" data-tab="creation-logs">Files Created</button>
+                    <button class="tab" data-tab="access-logs">Access Detected</button>
+                </div>
+                
+                <div class="tab-content active" id="creation-logs">
+                    <div class="log-header">
+                        <h3>🗂️ Creation History</h3>
+                        <button class="refresh-btn" id="refresh-creation">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                    <div class="log-content" id="creation-log-container">{{ creation_logs }}</div>
+                </div>
+                
+                <div class="tab-content" id="access-logs">
+                    <div class="log-header">
+                        <h3>
+                            <span class="pulse" id="live-indicator"></span>
+                            🚨 Access Detected (live)
+                        </h3>
+                        <button class="refresh-btn" id="refresh-access">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                    <div class="log-content" id="access-log-container">{{ access_logs }}</div>
+                </div>
+                
+                <div id="notification-container" style="position: relative; display: none;">
+                    <span class="notification-badge" id="notification-count">0</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- New How It Works section as requested -->
+        <div class="how-it-works">
+            <h2>💡 How it Works ?</h2>
+            
+            <ul>
+                <li>
+                    <h3>🛡️ 1. Sécurisation des images de l'utilisateur :</h3>
+                    <ol>
+                        <li>📥 <strong>L'utilisateur télécharge une image</strong> sur le site.</li>
+                        <li>🕵️‍♀️ <strong>Le site insère un lien piégé</strong> dans les <strong>métadonnées EXIF</strong> de l'image, créant ainsi un <strong>honeyfile</strong>.</li>
+                        <li>🔁 <strong>L'image modifiée est renvoyée</strong> à l'utilisateur pour qu'il puisse la <strong>conserver localement</strong>, avec le lien piégé caché à l'intérieur.</li>
+                    </ol>
+                </li>
+                <li>
+                    <h3>🚨 2. Suivi et alerte en cas d'accès :</h3>
+                    <ol>
+                        <li>🔓 Si <strong>un attaquant tente d'accéder à l'image</strong>, le système :
+                            <ul>
+                                <li>🧾 Enregistre l'<strong>adresse IP</strong>, le <strong>User-Agent</strong> et l'<strong>horodatage</strong> de l'intrusion.</li>
+                            </ul>
+                        </li>
+                        <li>⚠️ Lorsqu'un accès est détecté :
+                            <ul>
+                                <li>🔔 Une <strong>alerte est déclenchée</strong>.</li>
+                                <li>📊 Elle est <strong>affichée dans l'interface Flask</strong>, avec un <strong>suivi des intrusions en temps réel</strong>.</li>
+                            </ul>
+                        </li>
+                    </ol>
+                </li>
+            </ul>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <p>🔐 HoneyImage Protection Tool - Secure your images with embedded tracking</p>
+    </footer>
+
+    <script>
+        // Tab switching functionality
+        const tabs = document.querySelectorAll('.tab');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Désactiver tous les onglets
+                tabs.forEach(t => t.classList.remove('active'));
+                
+                // Masquer tous les contenus
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                
+                // Activer l'onglet cliqué
+                tab.classList.add('active');
+                
+                // Afficher le contenu correspondant
+                const tabId = tab.dataset.tab;
+                document.getElementById(tabId).classList.add('active');
+                
+                // Reset notification if showing access logs
+                if (tabId === 'access-logs') {
+                    document.getElementById('notification-container').style.display = 'none';
+                    document.getElementById('notification-count').textContent = '0';
+                }
+            });
+        });
+        
+        // Poll for new accesses every 30 seconds
+        setInterval(function() {
+            fetch('/api/check-accesses')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.has_new_accesses) {
+                        document.querySelector('#access-log-container').textContent = data.full_log;
+                        // Show notification badge
+                        const notificationContainer = document.getElementById('notification-container');
+                        const notificationCount = document.getElementById('notification-count');
+                        
+                        notificationContainer.style.display = 'block';
+                        notificationCount.textContent = parseInt(notificationCount.textContent || '0') + 1;
+                    }
+                });
+        }, 30000);
+        
+        // Function to refresh logs
+        function refreshLogs(logType) {
+            fetch(`/api/check-${logType}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.full_log) {
+                        document.getElementById(`${logType}-log-container`).textContent = data.full_log;
+                    }
+                })
+                .catch(error => console.error('Error refreshing logs:', error));
+        }
+        
+        // Add refresh button event listeners
+        document.getElementById('refresh-creation').addEventListener('click', () => refreshLogs('creation'));
+        document.getElementById('refresh-access').addEventListener('click', () => {
+            refreshLogs('access');
+            // Reset notification counter
+            document.getElementById('notification-container').style.display = 'none';
+            document.getElementById('notification-count').textContent = '0';
+        });
+        
+        // Animation for live indicator
+        setInterval(() => {
+            const liveIndicator = document.getElementById('live-indicator');
+            liveIndicator.style.opacity = liveIndicator.style.opacity === '0.5' ? '1' : '0.5';
+        }, 1000);
+    </script>
+</body>
+</html>
