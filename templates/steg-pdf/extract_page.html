@@ -2,75 +2,254 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Extraire un message - Stéganographie PDF</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Segoe+UI:wght@300;400;600;700&family=Roboto:wght@300;400;600;700&display=swap');
+
+        :root {
+            --primary: #4A90E2;
+            --dark-bg: #1A1D26;
+            --card-bg: #252A38;
+            --text: #E0E5EC;
+            --highlight: #FF6B6B;
+        }
+
         body {
-            font-family: Arial, sans-serif; /* Police en Arial */
-            background-image: url('/static/images/holla.jpg'); /* Chemin vers l'image */
-            background-size: cover; /* L'image couvre tout l'écran */
-            background-repeat: no-repeat; /* Pas de répétition */
-            background-position: center; /* Centré */
+            font-family: 'Segoe UI', 'Roboto', sans-serif;
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(rgba(26, 29, 38, 0.85), rgba(26, 29, 38, 0.95)), 
+                        url('/static/background.jpg') no-repeat center center fixed;
+            background-size: cover;
+            background-image: url("https://t4.ftcdn.net/jpg/05/88/41/87/360_F_588418753_Gv9LaTBJCFw1TDJY3zArUvEkkAYjaIYM.jpg");
+            min-height: 100vh;
             display: flex;
-            justify-content: center; /* Centre horizontalement */
-            align-items: center; /* Centre verticalement */
-            height: 100vh; /* Hauteur de l'écran */
-            margin: 0; /* Supprime les marges par défaut */
+            justify-content: center;
+            align-items: center;
         }
-        .contenu {
-            text-align: left; /* Aligne les champs et noms à gauche */
-            background-color: rgba(255, 255, 255, 0.8); /* Fond blanc semi-transparent */
-            padding: 20px;
-            border-radius: 10px; /* Coins arrondis */
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Effet d'ombre */
+
+        /* Container styles */
+        .container {
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 500px;
         }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(90deg, var(--primary), var(--highlight));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-weight: 700;
+            text-align: center;
+        }
+
         form {
             display: flex;
-            flex-direction: column; /* Organise les champs verticalement */
-            gap: 10px; /* Espace entre les champs */
+            flex-direction: column;
+            gap: 20px;
         }
+
         label {
-            margin-right: 10px; /* Espace entre le texte et le champ de saisie */
+            color: var(--text);
+            margin-bottom: 8px;
+            display: block;
+            font-weight: 500;
         }
-        input, button {
-            width: 100%; /* Les champs occupent toute la largeur */
-            padding: 10px; /* Espacement interne */
-            border-radius: 5px; /* Coins arrondis */
-            border: 1px solid #ccc; /* Bordure légère */
-        }
-        button {
-            background-color: #007BFF;
-            color: white;
-            border: none;
+
+        input[type="file"], input[type="password"] {
+            padding: 12px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text);
+            border: 1px solid rgba(74, 144, 226, 0.3);
             cursor: pointer;
+            width: 100%;
         }
+
+        button {
+            background: var(--primary);
+            color: var(--dark-bg);
+            border: none;
+            padding: 14px;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
         button:hover {
-            background-color: #0056b3;
+            background: linear-gradient(90deg, var(--primary), var(--highlight));
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(74, 144, 226, 0.4);
+        }
+
+        .home-btn {
+            background: transparent;
+            color: var(--text);
+            border: 2px solid var(--primary);
+            margin-top: 20px;
+        }
+
+        .home-btn:hover {
+            background: var(--primary);
+            color: var(--dark-bg);
+        }
+        
+        /* Message extrait styles */
+        .message-container {
+            margin-top: 25px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            border-left: 4px solid var(--primary);
+        }
+        
+        .message-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            color: var(--primary);
+            font-weight: 600;
+        }
+        
+        .message-header i {
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+        
+        .message-content {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            overflow-wrap: break-word;
+            min-height: 80px;
+        }
+        
+        /* Pour afficher conditionnellement le message */
+        .hidden {
+            display: none;
+        }
+
+        /* Spinner d'attente */
+        .loader {
+            border: 3px solid rgba(74, 144, 226, 0.3);
+            border-radius: 50%;
+            border-top: 3px solid var(--primary);
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+          
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
-    <div class="contenu">
-        <h1>Extraire un message d'un PDF</h1>
-        <form action="/extract" method="post" enctype="multipart/form-data">
+    <div class="container">
+        <h1>Extraire un message</h1>
+        <form id="extract-form">
             <div>
-                <label for="pdf_file">Fichier PDF :</label>
+                <label for="pdf_file"><i class="fas fa-file-pdf"></i> Fichier PDF :</label>
                 <input type="file" id="pdf_file" name="pdf_file" accept="application/pdf" required>
             </div>
             <div>
-                <label for="password">Mot de passe :</label>
+                <label for="password"><i class="fas fa-key"></i> Mot de passe :</label>
                 <input type="password" id="password" name="password" required>
             </div>
             <div>
-                <button type="submit">Extraire le message</button>
+                <button type="submit" id="extract-btn"><i class="fas fa-search"></i> Extraire le message</button>
             </div>
         </form>
-        <br>
-        <div>
-            <a href="/pdf">
-                <button type="button">Revenir à l'accueil</button>
-            </a>
+        
+        <!-- Indicateur de chargement -->
+        <div id="loading" class="loader hidden"></div>
+        
+        <!-- Zone pour afficher le message extrait -->
+        <div id="message-container" class="message-container hidden">
+            <div class="message-header">
+                <i class="fas fa-envelope-open-text"></i> Message extrait:
+            </div>
+            <div class="message-content" id="extracted-message"></div>
         </div>
-          
+        
+        <a href="/">
+            <button class="home-btn"><i class="fas fa-home"></i> Revenir à l'accueil</button>
+        </a>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('extract-form');
+            const messageContainer = document.getElementById('message-container');
+            const extractedMessage = document.getElementById('extracted-message');
+            const loading = document.getElementById('loading');
+            const extractBtn = document.getElementById('extract-btn');
+            
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Afficher l'indicateur de chargement
+                loading.classList.remove('hidden');
+                // Cacher le conteneur de message s'il était affiché
+                messageContainer.classList.add('hidden');
+                // Désactiver le bouton pendant le chargement
+                extractBtn.disabled = true;
+                
+                const formData = new FormData(form);
+                
+                fetch('/extract', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    // Si la réponse n'est pas OK (200-299), lever une erreur
+                    if (!response.ok) {
+                        throw new Error('Erreur lors de l\'extraction');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Cacher l'indicateur de chargement
+                    loading.classList.add('hidden');
+                    // Réactiver le bouton
+                    extractBtn.disabled = false;
+                    
+                    // Afficher le message extrait
+                    if (data.success) {
+                        extractedMessage.textContent = data.message;
+                        messageContainer.classList.remove('hidden');
+                    } else {
+                        extractedMessage.textContent = data.error || 'Erreur lors de l\'extraction du message.';
+                        messageContainer.classList.remove('hidden');
+                    }
+                })
+                .catch(error => {
+                    // Cacher l'indicateur de chargement
+                    loading.classList.add('hidden');
+                    // Réactiver le bouton
+                    extractBtn.disabled = false;
+                    
+                    // Afficher l'erreur
+                    extractedMessage.textContent = 'Erreur: ' + error.message;
+                    messageContainer.classList.remove('hidden');
+                });
+            });
+        });
+    </script>
 </body>
 </html>
+        
