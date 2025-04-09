@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Steganography Project | File Analysis</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1>File Analysis</h1>
+        <p>Upload an image or PDF file to detect hidden steganographic content</p>
+        
+        <form method="POST" enctype="multipart/form-data">
+            <div class="file-upload">
+                <input type="file" name="file" id="file-input" required>
+            </div>
+            
+            <button type="submit" class="transparent-btn">
+                <i class="fas fa-search"></i> Start Analysis
+            </button>
+        </form>
+        
+        <a href="/" class="transparent-btn" style="margin-top: 20px;">
+            <i class="fas fa-arrow-left"></i> Back to Home
+        </a>
+    </div>
+</body>
+</html>
