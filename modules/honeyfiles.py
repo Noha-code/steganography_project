@@ -30,7 +30,7 @@ limiter = Limiter(
 # Configuration for folders and files
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, "secured_images")
-HONEYPOT_FOLDER = os.path.join(BASE_DIR, "honeypot_endpoints")
+HONEYPOT_FOLDER = os.path.join(BASE_DIR, "tracking_endpoints")  # Renamed to be less obvious
 LOG_FILE = os.path.join(BASE_DIR, "alert_log.txt")
 ACCESS_LOG_FILE = os.path.join(BASE_DIR, "access_log.txt")
 TEMPLATES_FOLDER = os.path.join(BASE_DIR, "templates")
@@ -60,6 +60,13 @@ ATTRACTIVE_FILENAMES = [
     "financial_report", "customer_data", "credit_cards", "personal_info"
 ]
 
+# URL paths that look legitimate (rather than obvious "honeypot")
+LEGITIMATE_URL_PATHS = [
+    "financial-data", "secure-documents", "private-content", "access-portal",
+    "restricted-files", "user-data", "account-info", "confidential-reports",
+    "internal-docs", "client-records", "company-files", "personnel-records"
+]
+
 # Webhook configuration (to be defined by the user in the interface)
 WEBHOOK_URL = None
 
@@ -71,12 +78,15 @@ def generate_tracking_id():
 def create_honeypot_html(tracking_id):
     honeypot_path = os.path.join(HONEYPOT_FOLDER, f"{tracking_id}.html")
     
+    # Choose a legitimate-looking URL path
+    legitimate_path = random.choice(LEGITIMATE_URL_PATHS)
+    
     # Create a simple HTML file with JavaScript that will ping back to the server
     html_content = f"""
     <!DOCTYPE html>
     <html>
     <head>
-        <title>Loading...</title>
+        <title>Loading Secure Content...</title>
         <script>
             // Send ping to server immediately
             fetch('/track/{tracking_id}', {{
@@ -97,7 +107,7 @@ def create_honeypot_html(tracking_id):
         </script>
     </head>
     <body>
-        <p>Loading...</p>
+        <p>Loading secure content. Please wait...</p>
     </body>
     </html>
     """
@@ -105,13 +115,27 @@ def create_honeypot_html(tracking_id):
     with open(honeypot_path, "w") as f:
         f.write(html_content)
     
-    return f"/honeypot/{tracking_id}"
+    # Assure-toi que la création du honeypot est enregistrée dans les logs
+    now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_message = f"[{now}] Honeypot HTML created: {tracking_id}.html | Path: /{legitimate_path}/{tracking_id}\n"
+    
+    # S'assurer que le fichier de logs existe
+    if not os.path.exists(LOG_FILE):
+        with open(LOG_FILE, "w") as f:
+            f.write("")
+    
+    # Ajouter l'entrée au fichier de logs
+    with open(LOG_FILE, "a") as log_file:
+        log_file.write(log_message)
+    
+    return f"/{legitimate_path}/{tracking_id}"
 
 # Function to embed tracking URL in image EXIF data
 def embed_tracking_url(image_path, tracking_id, base_url):
     try:
-        # Generate the full tracking URL
-        tracking_url = f"{base_url}/honeypot/{tracking_id}"
+        # Generate the full tracking URL with legitimate-looking path
+        legitimate_path = random.choice(LEGITIMATE_URL_PATHS)
+        tracking_url = f"{base_url}/{legitimate_path}/{tracking_id}"
         
         # Load existing EXIF data or create new
         try:
@@ -233,12 +257,22 @@ def log_access(tracking_id, ip, user_agent, additional_info=None):
         logging.error(f"Error in log_access: {str(e)}")
         return False
 
-# Function to log image creation
-def log_creation(tracking_id, original_filename, ip):
+# Function to log image creation - Améliorée avec plus de détails
+def log_creation(tracking_id, original_filename, ip, safe_filename=None, url_path=None):
     try:
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         
-        log_message = f"[{now}] Image protected: {original_filename} | Tracking ID: {tracking_id} | Created from IP: {ip}\n"
+        # Ajouter le nom de fichier sécurisé dans le log si disponible
+        file_info = original_filename
+        if safe_filename:
+            file_info = f"{original_filename} → {safe_filename}"
+            
+        # Ajouter l'URL du honeypot si disponible
+        path_info = ""
+        if url_path:
+            path_info = f" | Honeypot URL: {url_path}"
+        
+        log_message = f"[{now}] Image protected: {file_info} | Tracking ID: {tracking_id} | Created from IP: {ip}{path_info}\n"
         
         # Create log file if it doesn't exist
         if not os.path.exists(LOG_FILE):
@@ -262,8 +296,8 @@ def send_webhook_alert(message):
         
         # Format for Discord/Slack
         payload = {
-            "content": f"🚨 *HONEYIMAGE ALERT* 🚨\n{message}",
-            "username": "HoneyImage Alert System"
+            "content": f"🚨 *SECURITY ALERT* 🚨\n{message}",  # Changed name to be less obvious
+            "username": "Security Monitoring System"  # Changed name to be less obvious
         }
         
         # Send the request
@@ -283,14 +317,23 @@ def send_webhook_alert(message):
         logging.error(f"Error in send_webhook_alert: {str(e)}")
         return False
 
-# Read logs for displaying history
+# Read logs for displaying history - Améliorée
 def read_logs(log_type="creation"):
     try:
+        # Assurez-vous d'utiliser le bon fichier de logs selon le type
         log_file = LOG_FILE if log_type == "creation" else ACCESS_LOG_FILE
+        
         if not os.path.exists(log_file):
             return "No logs available."
+            
         with open(log_file, "r") as f:
-            return f.read()
+            log_content = f.read()
+            
+        # Si le fichier existe mais est vide
+        if not log_content.strip():
+            return "No logs available."
+            
+        return log_content
     except Exception as e:
         logging.error(f"Error reading logs: {str(e)}")
         return "Error reading logs."
@@ -300,7 +343,7 @@ def read_logs(log_type="creation"):
 def home():
     return render_template("honeyfiles/index.html")
 
-# Route for main image protection page
+# Route for main image protection page - Améliorée pour la création de honeypot
 @app.route('/protect', methods=['GET', 'POST'])
 @limiter.limit("30 per hour")  # Limit to prevent abuse
 def protect_image():
@@ -358,6 +401,7 @@ def protect_image():
             
             # Get base URL for tracking link
             base_url = request.url_root.rstrip('/')
+            honeypot_full_url = f"{base_url}{honeypot_relative_url}"
             
             # Add tempting metadata based on form inputs
             title = request.form.get('metadata_title', '')
@@ -366,8 +410,8 @@ def protect_image():
             
             # Embed tracking URL in EXIF data
             if embed_tracking_url(image_path, tracking_id, base_url):
-                # Log the creation
-                log_creation(tracking_id, uploaded_file.filename, ip)
+                # Log the creation avec le nom de fichier sécurisé et l'URL du honeypot
+                log_creation(tracking_id, uploaded_file.filename, ip, safe_filename, honeypot_full_url)
                 
                 flash("Image protected successfully!", "success")
                 flash(f"Your image now contains hidden tracking links. If someone accesses this image and views its metadata, their access will be detected.", "info")
@@ -384,12 +428,23 @@ def protect_image():
             return redirect(request.url)
 
     # GET method - Display page with logs
-    creation_logs = read_logs("creation")
-    access_logs = read_logs("access")
+    creation_logs = read_logs("creation")  # Lit les logs de création
+    access_logs = read_logs("access")      # Lit les logs d'accès
     return render_template("honeyfiles/protect_image.html", creation_logs=creation_logs, access_logs=access_logs, webhook_url=WEBHOOK_URL)
 
-# Route to serve honeypot HTML files
-@app.route('/honeypot/<tracking_id>')
+# Routes for legitimate-looking paths that actually serve the honeypot
+@app.route('/financial-data/<tracking_id>')
+@app.route('/secure-documents/<tracking_id>')
+@app.route('/private-content/<tracking_id>')
+@app.route('/access-portal/<tracking_id>')
+@app.route('/restricted-files/<tracking_id>')
+@app.route('/user-data/<tracking_id>')
+@app.route('/account-info/<tracking_id>')
+@app.route('/confidential-reports/<tracking_id>')
+@app.route('/internal-docs/<tracking_id>')
+@app.route('/client-records/<tracking_id>')
+@app.route('/company-files/<tracking_id>')
+@app.route('/personnel-records/<tracking_id>')
 def serve_honeypot(tracking_id):
     try:
         # Serve the honeypot HTML file
@@ -419,7 +474,7 @@ def track_access(tracking_id):
             screen_size = data.get('screenSize', 'Unknown')
             additional_info = f"Referrer: {referrer} | Language: {language} | Screen: {screen_size}"
         
-        # Log the access
+        # Log the access dans le bon fichier
         log_access(tracking_id, ip, user_agent, additional_info)
         
         return jsonify({"status": "logged"})
@@ -430,22 +485,22 @@ def track_access(tracking_id):
 # API route to check for new accesses
 @app.route('/api/check-accesses', methods=['GET'])
 def check_accesses():
-    # This route can be used with JavaScript to check for new accesses without reloading the page
+    log_type = request.args.get('log_type', 'access')
     last_access = request.args.get('last_timestamp', '')
-    access_logs = read_logs("access")
+    logs = read_logs(log_type)  # Peut récupérer soit les logs d'accès, soit les logs de création
     
     # Simple logic: check if logs contain new entries since last check
     has_new = False
-    if last_access and access_logs:
-        lines = access_logs.strip().split('\n')
+    if last_access and logs and logs != "No logs available." and logs != "Error reading logs.":
+        lines = logs.strip().split('\n')
         if lines and lines[-1].startswith(f"[{last_access}]"):
             has_new = False
         else:
             has_new = True
     
     return jsonify({
-        "has_new_accesses": has_new,
-        "full_log": access_logs
+        "has_new_logs": has_new,
+        "full_log": logs
     })
 
 # 404 error handler - Updated for consistent template use
@@ -454,7 +509,7 @@ def check_accesses():
 def not_found(e=None):
     return render_template("honeyfiles/404.html"), 404
 
-# Route for quick image protection with default parameters
+# Route for quick image protection with default parameters - Améliorée
 @app.route('/quick-protect', methods=['POST'])
 def quick_protect():
     try:
@@ -477,19 +532,18 @@ def quick_protect():
         # Generate tracking ID
         tracking_id = generate_tracking_id()
         
-        # Create honeypot HTML
-        create_honeypot_html(tracking_id)
-        
-        # Get base URL
+        # Create honeypot HTML and get its URL
+        honeypot_relative_url = create_honeypot_html(tracking_id)
         base_url = request.url_root.rstrip('/')
+        honeypot_full_url = f"{base_url}{honeypot_relative_url}"
         
         # Add tempting metadata
         enhance_image_for_attackers(image_path)
         
         # Embed tracking URL
         if embed_tracking_url(image_path, tracking_id, base_url):
-            # Log creation
-            log_creation(tracking_id, uploaded_file.filename, request.remote_addr)
+            # Log creation avec l'URL complète du honeypot
+            log_creation(tracking_id, uploaded_file.filename, request.remote_addr, safe_filename, honeypot_full_url)
             
             # Generate access URL
             access_url = url_for('serve_protected_image', filename=safe_filename, _external=True)
