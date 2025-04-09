@@ -2,51 +2,97 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Accueil - Stéganographie PDF</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stéganographie PDF | Accueil</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Segoe+UI:wght@300;400;600;700&family=Roboto:wght@300;400;600;700&display=swap');
+
+        :root {
+            --primary: #4A90E2;
+            --dark-bg: #1A1D26;
+            --card-bg: #252A38;
+            --text: #E0E5EC;
+            --highlight: #FF6B6B;
+        }
+
         body {
-            font-family: Arial, sans-serif; /* Police globale */
-            background-image: url('/static/images/holla.jpg'); /* Image de fond */
-            background-size: cover; /* Couvre tout l'écran */
-            background-repeat: no-repeat; /* Pas de répétition */
-            background-position: center; /* Centré */
-            margin: 0; /* Supprime les marges */
-            padding: 0; /* Supprime les espaces */
-            display: flex; /* Active Flexbox */
-            justify-content: center; /* Centre horizontalement */
-            align-items: center; /* Centre verticalement */
-            height: 100vh; /* Hauteur de la page */
+            font-family: 'Segoe UI', 'Roboto', sans-serif;
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(rgba(26, 29, 38, 0.85), rgba(26, 29, 38, 0.95)), 
+                        url('/static/background.jpg') no-repeat center center fixed;
+            background-size: cover;
+            background-image: url("https://t4.ftcdn.net/jpg/05/88/41/87/360_F_588418753_Gv9LaTBJCFw1TDJY3zArUvEkkAYjaIYM.jpg");
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
-        .contenu {
-            text-align: center; /* Centre le texte dans le contenu */
-            background-color: rgba(240, 232, 232, 0.8); 
-            padding: 20px;
-            border-radius: 10px; /* Coins arrondis */
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Effet d'ombre */
+
+        /* Container styles */
+        .container {
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
         }
-        button {
-            font-family: Arial, sans-serif;
-            background-color: #007BFF; /* Couleur bleue des boutons */
-            color: white; /* Texte blanc */
-            border: none; /* Supprime les bordures */
-            border-radius: 5px; /* Coins arrondis */
-            padding: 10px 20px; /* Espacement interne */
-            cursor: pointer; /* Curseur interactif */
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(90deg, var(--primary), var(--highlight));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-weight: 700;
         }
-        button:hover {
-            background-color: #0056b3; /* Couleur plus sombre au survol */
+
+        p {
+            color: rgba(224, 229, 236, 0.8);
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            line-height: 1.6;
         }
-        a {
-            text-decoration: none; /* Supprime le soulignement des liens */
+
+        .transparent-btn {
+            background: transparent;
+            color: var(--text);
+            border: 2px solid var(--primary);
+            padding: 12px 20px;
+            margin: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 10px;
+            font-size: 16px;
+            display: inline-block;
+            text-decoration: none;
+        }
+
+        .transparent-btn:hover {
+            background: var(--primary);
+            color: var(--dark-bg);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(74, 144, 226, 0.4);
         }
     </style>
 </head>
 <body>
-    <div class="contenu">
-        <h1>Bienvenue dans l'application de stéganographie PDF</h1>
-        <h2>Choisissez une option :</h2>
-        <a href="hide_page"><button>Cacher un message</button></a>
-        <a href="extract_page"><button>Extraire un message</button></a>
+    <div class="container">
+        <h1>Stéganographie PDF</h1>
+        <p>Bienvenue dans l'application de stéganographie PDF sécurisée</p>
+        
+        <a href="/hide_page" class="transparent-btn">
+            <i class="fas fa-eye-slash"></i> Cacher un message
+        </a>
+        
+        <a href="/extract_page" class="transparent-btn">
+            <i class="fas fa-search"></i> Extraire un message
+        </a>
     </div>
 </body>
 </html>
