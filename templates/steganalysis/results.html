@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Steganography Project | Analysis Results</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container results-container">
+        <h1>Analysis Results</h1>
+        <p>Analyzed file: <strong>{{ filename }}</strong> ({{ results.file_type | upper }})</p>
+        
+        <!-- Confidence Visualization -->
+        <div class="confidence-circle">
+            <svg viewBox="0 0 100 100">
+                <circle class="circle-bg" cx="50" cy="50" r="45"></circle>
+                <circle class="circle-progress" cx="50" cy="50" r="45" 
+                        stroke-dasharray="283" stroke-dashoffset="283"></circle>
+                <text class="circle-text" x="50" y="50" text-anchor="middle" dy=".3em">0%</text>
+            </svg>
+        </div>
+        
+        <div class="verdict {{ 'stego-yes' if results.combined_confidence > 50 else 'stego-no' }}">
+            {{ 'LIKELY CONTAINS HIDDEN DATA' if results.combined_confidence > 50 else 'NO STEGANOGRAPHY DETECTED' }}
+            <br>
+            <small>Confidence: {{ results.combined_confidence }}%</small>
+        </div>
+
+        <!-- Method Results -->
+        {% for method_name, method_data in results.methods.items() %}
+        <div class="method-card">
+            <div class="method-header" onclick="toggleDetails('{{ method_name }}')">
+                <h3>{{ method_name }} Analysis</h3>
+                <span class="verdict-badge {{ 'suspicious' if 'Suspicious' in method_data.verdict or 'found' in method_data.verdict else 'clean' }}">
+                    {{ method_data.verdict }} ({{ method_data.confidence }}%)
+                </span>
+                <i class="fas fa-chevron-down toggle-icon" id="{{ method_name }}-icon"></i>
+            </div>
+            
+            <div id="{{ method_name }}-details" class="technical-details">
+                {% if method_data.details %}
+                    <table>
+                        {% for key, value in method_data.details.items() %}
+                        <tr>
+                            <th>{{ key|replace('_', ' ')|title }}</th>
+                            <td>
+                                {% if value is mapping %}
+                                    <table class="nested-table">
+                                        {% for subkey, subvalue in value.items() %}
+                                        <tr>
+                                            <td><strong>{{ subkey }}:</strong></td>
+                                            <td>{{ subvalue }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </table>
+                                {% elif value is sequence and value is not string %}
+                                    <ul>
+                                        {% for item in value %}
+                                        <li>{{ item }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                {% else %}
+                                    {{ value }}
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                {% else %}
+                    <p>No technical details available</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+        
+        <div style="margin-top: 30px;">
+            <a href="/analyze" class="transparent-btn">
+                <i class="fas fa-search"></i> Analyze Another File
+            </a>
+            
+            <a href="/" class="transparent-btn">
+                <i class="fas fa-home"></i> Return Home
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // Safely parse results from Flask
+        const analysisResults = JSON.parse('{{ results | tojson | safe }}');
+        const combinedConfidence = analysisResults.combined_confidence || 0;
+        
+        // Animate confidence circle
+        function animateCircle() {
+            const circle = document.querySelector('.circle-progress');
+            const circleText = document.querySelector('.circle-text');
+            const offset = 283 - (283 * combinedConfidence / 100);
+            
+            setTimeout(() => {
+                circle.style.strokeDashoffset = offset;
+                circleText.textContent = `${combinedConfidence}%`;
+                
+                // Change color based on confidence level
+                if (combinedConfidence > 75) {
+                    circle.style.stroke = '#FF6B6B'; // High risk - highlight color
+                } else if (combinedConfidence > 50) {
+                    circle.style.stroke = '#ff9f43'; // Medium risk - orange
+                } else if (combinedConfidence > 25) {
+                    circle.style.stroke = '#4A90E2'; // Low risk - primary color
+                } else {
+                    circle.style.stroke = '#2ed573'; // No risk - green
+                }
+            }, 500);
+        }
+        
+        // Toggle technical details
+        function toggleDetails(method) {
+            const details = document.getElementById(`${method}-details`);
+            const icon = document.getElementById(`${method}-icon`);
+            
+            details.classList.toggle('active');
+            icon.classList.toggle('fa-chevron-down');
+            icon.classList.toggle('fa-chevron-up');
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', animateCircle);
+    </script>
+</body>
+</html>
