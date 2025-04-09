@@ -2,81 +2,179 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cacher un message - Stéganographie PDF</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Segoe+UI:wght@300;400;600;700&family=Roboto:wght@300;400;600;700&display=swap');
+
+        :root {
+            --primary: #4A90E2;
+            --dark-bg: #1A1D26;
+            --card-bg: #252A38;
+            --text: #E0E5EC;
+            --highlight: #FF6B6B;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            background-image: url('/static/images/holla.jpg');
-            background-size: cover;
-            background-repeat: no-repeat;
-            background-position: center;
+            font-family: 'Segoe UI', 'Roboto', sans-serif;
+            color: var(--text);
             margin: 0;
             padding: 0;
+            background: linear-gradient(rgba(26, 29, 38, 0.85), rgba(26, 29, 38, 0.95)), 
+                        url('/static/background.jpg') no-repeat center center fixed;
+            background-size: cover;
+            background-image: url("https://t4.ftcdn.net/jpg/05/88/41/87/360_F_588418753_Gv9LaTBJCFw1TDJY3zArUvEkkAYjaIYM.jpg");
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
         }
-        .contenu {
+
+        /* Container styles */
+        .container {
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 500px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(90deg, var(--primary), var(--highlight));
+            
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-weight: 700;
             text-align: center;
-            background-color: rgba(255, 255, 255, 0.8);
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            width: 400px;
         }
-        form div {
-            margin-bottom: 20px;
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
         }
+
         label {
+            color: var(--text);
+            margin-bottom: 8px;
             display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
+            font-weight: 500;
         }
-        input, textarea {
-            width: 100%;
-            padding: 10px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-        }
-        button {
-            background-color: #007BFF;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            padding: 10px 20px;
+
+        input[type="file"], input[type="password"], textarea {
+            padding: 12px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text);
+            border: 1px solid rgba(74, 144, 226, 0.3);
             cursor: pointer;
+            width: 100%;
         }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        button {
+            background: var(--primary);
+            color: var(--dark-bg);
+            border: none;
+            padding: 14px;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
         button:hover {
-            background-color: #0056b3;
+            background: linear-gradient(90deg, var(--primary), var(--highlight));
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(74, 144, 226, 0.4);
+        }
+
+        .home-btn {
+            background: transparent;
+            color: var(--text);
+            border: 2px solid var(--primary);
+            margin-top: 20px;
+        }
+
+        .home-btn:hover {
+            background: var(--primary);
+            color: var(--dark-bg);
+        }
+        
+        /* Loader styles */
+        .loader {
+            border: 3px solid rgba(74, 144, 226, 0.3);
+            border-radius: 50%;
+            border-top: 3px solid var(--primary);
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+            display: none;
+        }
+          
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .hidden {
+            display: none;
         }
     </style>
 </head>
 <body>
-    <div class="contenu">
-        <h1>Cacher un message dans un PDF</h1>
-        <form action="/hide" method="POST" enctype="multipart/form-data">
+    <div class="container">
+        <h1>Cacher un message</h1>
+        <form action="/hide" method="POST" enctype="multipart/form-data" id="hide-form">
             <div>
-                <label for="pdf_file">Fichier PDF :</label>
+                <label for="pdf_file"><i class="fas fa-file-pdf"></i> Fichier PDF :</label>
                 <input type="file" id="pdf_file" name="pdf_file" accept="application/pdf" required>
             </div>
             <div>
-                <label for="message">Message à cacher :</label>
+                <label for="message"><i class="fas fa-comment-dots"></i> Message à cacher :</label>
                 <textarea id="message" name="message" rows="5" required></textarea>
             </div>
             <div>
-                <label for="password">Mot de passe :</label>
+                <label for="password"><i class="fas fa-key"></i> Mot de passe :</label>
                 <input type="password" id="password" name="password" required>
             </div>
             <div>
-                <button type="submit">Cacher le message</button>
-            </div>
-            <div>
-                <a href="/pdf" >
-                    <button type="button">Revenir à l'accueil</button>
-                </a>
+                <button type="submit" id="hide-btn"><i class="fas fa-eye-slash"></i> Cacher le message</button>
             </div>
         </form>
+        
+        <!-- Indicateur de chargement -->
+        <div id="loading" class="loader hidden"></div>
+        
+        <a href="/">
+            <button class="home-btn"><i class="fas fa-home"></i> Revenir à l'accueil</button>
+        </a>
     </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('hide-form');
+            const loading = document.getElementById('loading');
+            const hideBtn = document.getElementById('hide-btn');
+            
+            form.addEventListener('submit', function() {
+                // Afficher l'indicateur de chargement
+                loading.style.display = 'block';
+                // Désactiver le bouton pendant le chargement
+                hideBtn.disabled = true;
+            });
+        });
+    </script>
 </body>
 </html>
