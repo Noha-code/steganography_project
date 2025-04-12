@@ -1,4 +1,3 @@
-
 import os
 import io
 import fitz  # PyMuPDF
@@ -6,24 +5,39 @@ import numpy as np
 import torch
 from PIL import Image
 from typing import Dict, List
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
 class PDFSteganalysis:
     def __init__(self, pdf_path: str):
         self.pdf_path = pdf_path
         self.doc = self._load_pdf()
-        self.text = ""
-        self.nlp_model, self.tokenizer = self._load_nlp_model()
+        self.images = []
+        # Try to import CNN model if available
+        self.cnn_model = self._try_load_cnn_model()
+
+    def _try_load_cnn_model(self):
+        try:
+            # Try to import the model from the project structure
+            import sys
+            import os
+            # Add the parent directory to path
+            sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            from models.stego_resnet import StegoResNet
+            
+            model = StegoResNet()
+            # Assuming a pre-trained model is available
+            # model.load_state_dict(torch.load("path/to/model.pth"))
+            return model.eval()
+        except Exception as e:
+            print(f"[!] CNN model loading failed: {e}")
+            return None
 
     def analyze(self) -> Dict:
-        
         try:
             metadata_result = self._analyze_metadata()
             hidden_text_result = self._analyze_hidden_content()
-            text_analysis_result = self._analyze_text()
-
-            # Format adapté aux attentes de handle_pdf_analysis() dans app.py
-            return {
+            
+            # Create basic results structure without CNN analysis
+            results = {
                 "metadata": {
                     "is_suspicious": metadata_result["is_stego"],
                     "verdict": metadata_result["verdict"],
@@ -35,17 +49,31 @@ class PDFSteganalysis:
                     "verdict": hidden_text_result["verdict"],
                     "confidence": hidden_text_result["confidence"],
                     "items": hidden_text_result["details"]["hidden_text"]
-                },
-                "text_analysis": {
-                    "is_suspicious": text_analysis_result["is_stego"],
-                    "verdict": text_analysis_result["verdict"],
-                    "confidence": text_analysis_result["confidence"],
-                    "details": text_analysis_result["details"]
                 }
             }
+            
+            # Only add image analysis if CNN model exists
+            if self.cnn_model and self.images:
+                image_analysis_result = self._analyze_images()
+                results["image_analysis"] = {
+                    "is_suspicious": image_analysis_result["is_stego"],
+                    "verdict": image_analysis_result["verdict"],
+                    "confidence": image_analysis_result["confidence"],
+                    "details": image_analysis_result["details"]
+                }
+            else:
+                # Add placeholder for image analysis when CNN is not available
+                results["image_analysis"] = {
+                    "is_suspicious": False,
+                    "verdict": "CNN model not available for image analysis",
+                    "confidence": 0.0,
+                    "details": {"image_count": 0}
+                }
+
+            return results
 
         except Exception as e:
-            return {"error": f"Analyse du PDF échouée: {str(e)}"}
+            return {"error": f"PDF analysis failed: {str(e)}"}
 
     # ──────────────── Analysis Steps ──────────────── #
 
@@ -71,8 +99,7 @@ class PDFSteganalysis:
     def _analyze_hidden_content(self) -> Dict:
         hidden_items = []
         object_stats = {"pages": len(self.doc), "objects": 0}
-        full_text = ""
-
+        
         for page in self.doc:
             blocks = page.get_text("dict").get("blocks", [])
             object_stats["objects"] += len(blocks)
@@ -83,17 +110,18 @@ class PDFSteganalysis:
                             text = span.get("text", "").strip()
                             color = span.get("color", 0)
                             size = span.get("size", 0)
-                            if text:
-                                full_text += text + " "
-                                if color == 0xFFFFFF or size < 1.0:
-                                    hidden_items.append({
-                                        "text": text,
-                                        "page": page.number + 1,
-                                        "color": color,
-                                        "size": size
-                                    })
+                            if text and (color == 0xFFFFFF or size < 1.0):
+                                hidden_items.append({
+                                    "text": text,
+                                    "page": page.number + 1,
+                                    "color": color,
+                                    "size": size
+                                })
+            
+            # Extract images only if CNN model is available
+            if self.cnn_model:
+                self._extract_images_from_page(page)
 
-        self.text = full_text.strip()
         suspicious = len(hidden_items) > 0
 
         return {
@@ -107,30 +135,80 @@ class PDFSteganalysis:
             }
         }
 
-    def _analyze_text(self) -> Dict:
-        if not self.nlp_model or not self.text:
+    def _extract_images_from_page(self, page):
+        """Extract images from a PDF page for CNN analysis"""
+        image_list = page.get_images(full=True)
+        
+        for img_index, img_info in enumerate(image_list):
+            xref = img_info[0]
+            base_image = self.doc.extract_image(xref)
+            
+            if base_image:
+                image_bytes = base_image["image"]
+                try:
+                    image = Image.open(io.BytesIO(image_bytes))
+                    self.images.append({
+                        "image": image,
+                        "page": page.number + 1,
+                        "index": img_index
+                    })
+                except Exception as e:
+                    print(f"[!] Failed to load image: {e}")
+
+    def _analyze_images(self) -> Dict:
+        """Analyze extracted images using CNN model"""
+        if not self.cnn_model or not self.images:
             return {
-                "verdict": "NLP model not available or no text extracted",
+                "verdict": "No images to analyze",
                 "is_stego": False,
                 "confidence": 0.0,
-                "details": {}
+                "details": {
+                    "image_count": len(self.images)
+                }
             }
 
-        inputs = self.tokenizer(self.text, return_tensors="pt", truncation=True, max_length=512)
-        with torch.no_grad():
-            outputs = self.nlp_model(**inputs)
+        suspicious_images = []
+        confidence_scores = []
 
-        probs = torch.softmax(outputs.logits, dim=1)
-        confidence = torch.max(probs).item()
-        is_suspicious = confidence < 0.7
-
+        for img_data in self.images:
+            img = img_data["image"]
+            
+            # Preprocess image for CNN input
+            try:
+                # Resize to expected input size (e.g., 224x224 for ResNet)
+                img = img.convert("RGB").resize((224, 224))
+                img_tensor = torch.FloatTensor(np.array(img)).permute(2, 0, 1) / 255.0
+                img_tensor = img_tensor.unsqueeze(0)  # Add batch dimension
+                
+                # Get prediction
+                with torch.no_grad():
+                    outputs = self.cnn_model(img_tensor)
+                    # Assuming binary classification (stego vs clean)
+                    probs = torch.softmax(outputs, dim=1)
+                    stego_prob = probs[0][1].item()  # Probability of being stego
+                    
+                    confidence_scores.append(stego_prob)
+                    if stego_prob > 0.6:  # Threshold for considering suspicious
+                        suspicious_images.append({
+                            "page": img_data["page"],
+                            "index": img_data["index"],
+                            "confidence": round(stego_prob, 3)
+                        })
+            except Exception as e:
+                print(f"[!] Image analysis failed: {e}")
+        
+        # Calculate overall confidence
+        avg_confidence = sum(confidence_scores) / len(confidence_scores) if confidence_scores else 0
+        is_suspicious = len(suspicious_images) > 0
+        
         return {
-            "verdict": "Text anomaly detected" if is_suspicious else "Text appears normal",
+            "verdict": f"{len(suspicious_images)} suspicious images detected" if is_suspicious else "No suspicious images found",
             "is_stego": is_suspicious,
-            "confidence": round(1 - confidence if is_suspicious else confidence, 3),
+            "confidence": round(avg_confidence, 3),
             "details": {
-                "text_length": len(self.text),
-                "model_confidence": round(confidence, 3)
+                "image_count": len(self.images),
+                "suspicious_count": len(suspicious_images),
+                "suspicious_images": suspicious_images[:10]  # Limit to first 10
             }
         }
 
@@ -140,12 +218,3 @@ class PDFSteganalysis:
         if not os.path.exists(self.pdf_path):
             raise FileNotFoundError(f"PDF not found: {self.pdf_path}")
         return fitz.open(self.pdf_path)
-
-    def _load_nlp_model(self):
-        try:
-            tokenizer = AutoTokenizer.from_pretrained("distilbert-base-uncased")
-            model = AutoModelForSequenceClassification.from_pretrained("distilbert-base-uncased")
-            return model.eval(), tokenizer
-        except Exception as e:
-            print(f"[!] NLP model loading failed: {e}")
-            return None, None
