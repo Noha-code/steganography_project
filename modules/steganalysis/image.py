@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 from scipy.stats import chisquare, entropy
-import tensorflow as tf
+import torch
 from concurrent.futures import ThreadPoolExecutor
 import io
 import os
@@ -10,7 +10,7 @@ import sys
 # Import the StegoResNet model
 sys.path.append("../../")  # Adjust path if necessary
 try:
-    from stego_resnet import StegoResNet
+    from models.stego_resnet import StegoResNet
 except ImportError:
     # Fallback if the import fails
     class StegoResNet:
@@ -20,41 +20,27 @@ except ImportError:
             
         @staticmethod
         def prepare_image(img_array, target_size=(224, 224)):
-            # Convertir en RGB si nécessaire
-            if len(img_array.shape) == 2:  # Image en niveaux de gris
+            # Convert to RGB if necessary
+            if len(img_array.shape) == 2:  # Grayscale image
                 img_array = np.stack((img_array,) * 3, axis=-1)
             
-            # Redimensionner
+            # Resize
             img_array = cv2.resize(img_array, target_size)
             
-            # Normaliser
+            # Normalize
             img_array = img_array / 255.0
             
-            # Ajouter la dimension du batch
+            # Add batch dimension
             img_array = np.expand_dims(img_array, axis=0)
             
             return img_array
 
 class ImageSteganalysis:
     def __init__(self, cnn_model_path=None):
-        """
-        Initialize the steganalysis tool
-        
-        Args:
-            cnn_model_path: Path to a pre-trained CNN model
-        """
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.cnn_model = self._load_cnn_model(cnn_model_path) if cnn_model_path else None
 
     def analyze(self, file_storage):
-        """
-        Analyze an image for steganography
-        
-        Args:
-            file_storage: Image file object
-            
-        Returns:
-            dict: Analysis results
-        """
         try:
             image = self._load_image_from_filestorage(file_storage)
         except Exception as e:
@@ -66,15 +52,6 @@ class ImageSteganalysis:
         return self._run_analysis(image)
 
     def analyze_image_path(self, path):
-        """
-        Analyze an image at the given path
-        
-        Args:
-            path: Path to the image file
-            
-        Returns:
-            dict: Analysis results
-        """
         if not os.path.exists(path):
             return {"error": f"File not found: {path}"}
             
@@ -103,40 +80,32 @@ class ImageSteganalysis:
             if self.cnn_model:
                 futures["CNN"] = executor.submit(self._analyze_cnn, img)
 
-        # Récupérer tous les résultats
+        # Get all results
         results = {method: job.result() for method, job in futures.items()}
         
-        # Calculer le résumé des résultats
+        # Calculate summary
         summary = self._summarize_results(results)
         
         return {"summary": summary, "results": results}
 
-    # ──────────────── Méthodes d'analyse de stéganographie ──────────────── #
+    # ──────────────── Steganography analysis methods ──────────────── #
 
     def _analyze_lsb(self, img):
-        """
-        Analyse les bits de poids faible (LSB) pour détecter la stéganographie
         
-        Args:
-            img: Image en niveaux de gris
-            
-        Returns:
-            dict: Résultats de l'analyse LSB
-        """
-        # Extraire le plan LSB
+        # Extract LSB plane
         lsb_plane = img & 1
         
-        # Compter les occurrences de 0 et 1
+        # Count occurrences of 0 and 1
         counts = np.bincount(lsb_plane.flatten(), minlength=2)
         total = img.size
         
-        # Calculer le ratio entre 0 et 1 (proche de 0.5 pour une image stéganographiée)
+        # Calculate ratio between 0 and 1 (close to 0.5 for a steganographed image)
         ratio = abs(counts[0] - counts[1]) / total
         
-        # Calculer l'entropie du plan LSB
+        # Calculate entropy of LSB plane
         lsb_entropy = entropy(counts / total) if counts[1] > 0 and counts[0] > 0 else 0
         
-        # Déterminer si l'image contient de la stéganographie
+        # Determine if image contains steganography
         is_stego = ratio < 0.05 and lsb_entropy > 0.9
         
         return {
@@ -153,25 +122,25 @@ class ImageSteganalysis:
 
     def _analyze_spa(self, img):
         """
-        Analyse par paires de pixels (Sample Pairs Analysis)
+        Sample Pairs Analysis
         
         Args:
-            img: Image en niveaux de gris
+            img: Grayscale image
             
         Returns:
-            dict: Résultats de l'analyse SPA
+            dict: SPA analysis results
         """
-        # Calculer les différences entre pixels adjacents
+        # Calculate differences between adjacent pixels
         diff = np.abs(np.diff(img.astype(np.float32), axis=1))
         
-        # Calculer le score SPA (moyenne des différences)
+        # Calculate SPA score (mean of differences)
         spa_score = float(np.mean(diff))
         
-        # Des différences trop faibles indiquent une possible stéganographie
+        # Too small differences indicate possible steganography
         is_stego = spa_score < 2.0
         
-        # Calculer la confiance (plus le score est bas, plus la confiance est élevée)
-        # Limiter entre 0 et 1
+        # Calculate confidence (lower score means higher confidence)
+        # Limit between 0 and 1
         confidence = 1.0 - min(1.0, max(0, spa_score / 10.0))
         
         return {
@@ -188,31 +157,31 @@ class ImageSteganalysis:
 
     def _analyze_chi_square(self, img):
         """
-        Test du chi-carré sur la distribution des bits de poids faible
+        Chi-square test on LSB distribution
         
         Args:
-            img: Image en niveaux de gris
+            img: Grayscale image
             
         Returns:
-            dict: Résultats du test chi-carré
+            dict: Chi-square test results
         """
-        # Extraire le plan LSB
+        # Extract LSB plane
         lsb = img & 1
         
-        # Compter les occurrences de 0 et 1
+        # Count occurrences of 0 and 1
         counts = np.bincount(lsb.flatten(), minlength=2)
         
-        # Distribution attendue pour un LSB non modifié
+        # Expected distribution for unmodified LSB
         expected = np.array([img.size / 2, img.size / 2])
         
-        # Calculer la statistique du chi-carré
+        # Calculate chi-square statistic
         try:
             chi2, p_value = chisquare(counts, f_exp=expected)
         except Exception:
-            # En cas d'erreur, utiliser des valeurs par défaut
+            # In case of error, use default values
             chi2, p_value = 0, 1.0
         
-        # Une p-value faible indique une distribution non aléatoire (stéganographie)
+        # A low p-value indicates non-random distribution (steganography)
         is_stego = p_value < 0.05
         
         return {
@@ -229,13 +198,13 @@ class ImageSteganalysis:
 
     def _analyze_cnn(self, img):
         """
-        Analyse avec un modèle de CNN pour détecter la stéganographie
+        Analyze with CNN model to detect steganography
         
         Args:
-            img: Image en niveaux de gris
+            img: Grayscale image
             
         Returns:
-            dict: Résultats de l'analyse CNN
+            dict: CNN analysis results
         """
         if self.cnn_model is None:
             return {
@@ -246,15 +215,22 @@ class ImageSteganalysis:
             }
             
         try:
-            # Utiliser la fonction de préparation d'image du modèle StegoResNet
-            # Cette fonction convertit en RGB si nécessaire et normalise l'image
+            # Use StegoResNet's image preparation function
+            # This converts to RGB if necessary and normalizes the image
             prepared_img = StegoResNet.prepare_image(img, target_size=(224, 224))
             
-            # Prédire
-            prediction = self.cnn_model.predict(prepared_img, verbose=0)
-            confidence = float(prediction[0][0])
+            # Move tensor to the appropriate device
+            prepared_img = prepared_img.to(self.device)
             
-            # Déterminer si l'image contient de la stéganographie
+            # Set model to evaluation mode
+            self.cnn_model.eval()
+            
+            # Predict
+            with torch.no_grad():
+                prediction = self.cnn_model(prepared_img)
+            confidence = float(prediction.cpu().numpy()[0][0])
+            
+            # Determine if image contains steganography
             is_stego = confidence > 0.5
             
             return {
@@ -271,25 +247,25 @@ class ImageSteganalysis:
                 "details": {"error": str(e)}
             }
 
-    # ──────────────── Fonctions auxiliaires ──────────────── #
+    # ──────────────── Helper functions ──────────────── #
 
     def _load_image_from_filestorage(self, file_storage):
         """
-        Charge une image à partir d'un objet FileStorage ou d'un chemin de fichier
+        Loads an image from a FileStorage object or file path
         
         Args:
-            file_storage: Objet FileStorage ou chemin de fichier
+            file_storage: FileStorage object or file path
             
         Returns:
-            numpy.ndarray: Image en niveaux de gris
+            numpy.ndarray: Grayscale image
         """
-        # Si c'est un chemin de fichier
+        # If it's a file path
         if isinstance(file_storage, str):
             if not os.path.exists(file_storage):
                 raise FileNotFoundError(f"File not found: {file_storage}")
             return cv2.imread(file_storage, cv2.IMREAD_GRAYSCALE)
         
-        # Si c'est un objet FileStorage
+        # If it's a FileStorage object
         try:
             in_memory_file = io.BytesIO()
             file_storage.save(in_memory_file)
@@ -300,18 +276,23 @@ class ImageSteganalysis:
 
     def _load_cnn_model(self, model_path):
         """
-        Charge un modèle CNN ou en construit un nouveau si nécessaire
+        Loads a CNN model or builds a new one if necessary
         
         Args:
-            model_path: Chemin vers un modèle pré-entraîné
+            model_path: Path to a pre-trained model
             
         Returns:
-            Un modèle TensorFlow
+            A PyTorch model
         """
-        # Si nous avons un chemin de modèle valide, essayer de le charger
+        # If we have a valid model path, try to load it
         if model_path and os.path.exists(model_path):
             try:
-                model = tf.keras.models.load_model(model_path)
+                # Create model instance first
+                model = StegoResNet.build_model(input_shape=(224, 224, 3), weights=None)
+                # Load the saved state dictionary
+                model.load_state_dict(torch.load(model_path, map_location=self.device))
+                model = model.to(self.device)
+                model.eval()  # Set to evaluation mode
                 print(f"[+] CNN model loaded successfully from {model_path}")
                 return model
             except Exception as e:
@@ -321,10 +302,12 @@ class ImageSteganalysis:
             print(f"[!] CNN model path not found: {model_path}")
             print("[*] Building a new StegoResNet model...")
             
-        # Si le chargement échoue ou si aucun chemin n'est fourni, essayer de construire un nouveau modèle
+        # If loading fails or no path is provided, try to build a new model
         try:
-            # Créer un nouveau modèle StegoResNet
+            # Create a new StegoResNet model
             model = StegoResNet.build_model(input_shape=(224, 224, 3), weights='imagenet')
+            model = model.to(self.device)
+            model.eval()  # Set to evaluation mode
             print("[+] New StegoResNet model built successfully")
             return model
         except Exception as e:
@@ -333,26 +316,26 @@ class ImageSteganalysis:
 
     def _summarize_results(self, results):
         """
-        Résume les résultats de toutes les méthodes d'analyse
+        Summarizes results from all analysis methods
         
         Args:
-            results: Dictionnaire des résultats par méthode
+            results: Dictionary of results by method
             
         Returns:
-            dict: Résumé des résultats
+            dict: Summary of results
         """
-        # Compter les méthodes qui ont détecté de la stéganographie
+        # Count methods that detected steganography
         suspicious_methods = [name for name, data in results.items() if data.get("is_stego", False)]
         suspicious_count = len(suspicious_methods)
         
-        # Calculer la confiance moyenne des méthodes qui ont détecté de la stéganographie
+        # Calculate average confidence of methods that detected steganography
         if suspicious_count > 0:
             suspicious_confidences = [results[name]["confidence"] for name in suspicious_methods]
             average_confidence = sum(suspicious_confidences) / len(suspicious_confidences)
         else:
             average_confidence = 0.0
         
-        # Calculer la confiance globale (basée sur toutes les méthodes)
+        # Calculate overall confidence (based on all methods)
         total_methods = len(results)
         overall_confidence = average_confidence * (suspicious_count / total_methods) if total_methods > 0 else 0
         
