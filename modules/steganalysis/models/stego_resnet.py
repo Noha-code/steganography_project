@@ -4,16 +4,7 @@ import torch.nn.functional as F
 import torchvision.models as models
 
 class StegoResNet(nn.Module):
-    """ResNet model adapted for steganography detection"""
-    
     def __init__(self, input_shape=(224, 224, 3), weights='imagenet'):
-        """
-        Constructs a ResNet50 model adapted for steganalysis
-        
-        Args:
-            input_shape: Input shape (height, width, channels)
-            weights: Pre-trained weights to use ('imagenet' or None)
-        """
         super(StegoResNet, self).__init__()
         
         # Load pre-trained ResNet50 without fully connected layers
