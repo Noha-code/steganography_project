@@ -71,15 +71,7 @@ def embed_lsb_message(image, message=None, embed_ratio=0.1):
     return stego_img
 
 def create_stego_dataset_from_images(input_dir, output_dir, num_samples, embed_ratio=0.1):
-    """
-    Crée un dataset à partir d'images existantes
     
-    Args:
-        input_dir: Répertoire contenant les images source
-        output_dir: Répertoire de sortie
-        num_samples: Nombre d'échantillons à générer
-        embed_ratio: Pourcentage de bits à modifier
-    """
     image_files = [f for f in os.listdir(input_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
     
     if not image_files:
